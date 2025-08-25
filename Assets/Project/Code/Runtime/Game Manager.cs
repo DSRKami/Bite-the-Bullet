@@ -2,15 +2,215 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [Header("Players")]
+    public PlayerState playerA;
+    public PlayerState playerB;
+
+    [Header("Revolvers")]
+    public Revolver revolverA;
+    public Revolver revolverB;
+
+    [Header("Game State")]
+    public bool isPlayerATurn = true;
+    public int currentTurnCount = 0;
+
+    public void StartGame()
     {
-        
+        isPlayerATurn = Random.Range(0, 2) == 0;
+        currentTurnCount = 0;
+        Debug.Log("Coinflip! " + (isPlayerATurn ? "Player A starts" : "Player B starts"));
     }
 
-    // Update is called once per frame
-    void Update()
+    public void NextTurn()
     {
-        
+        isPlayerATurn = !isPlayerATurn;
+        currentTurnCount++;
+        PlayerState currentPlayer = isPlayerATurn ? playerA : playerB;
+        currentPlayer.UpdateStatusEffects();
+        Debug.Log("Turn " + currentTurnCount + ": " + (isPlayerATurn ? "Player A's turn" : "Player B's turn"));
     }
+
+    private void CheckGameOver()
+    {
+        if (playerA.Health <= 0)
+        {
+            Debug.Log("Player B wins!");
+            EndGame();
+        }
+        else if (playerB.Health <= 0)
+        {
+            Debug.Log("Player A wins!");
+            EndGame();
+        }
+    }
+
+    private void EndGame()
+    {
+        Debug.Log("Game Over!");
+        enabled = false; // Disable further game actions
+    }
+
+    public void PlayTurn(PlayerAction action, ToothType selectedTooth = ToothType.Blank)
+    {
+        PlayerState currentPlayer = isPlayerATurn ? playerA : playerB;
+        Revolver currentRevolver = isPlayerATurn ? revolverA : revolverB;
+        PlayerState opponentPlayer = isPlayerATurn ? playerB : playerA;
+        Revolver opponentRevolver = isPlayerATurn ? revolverB : revolverA;
+
+        switch (action)
+        {
+            case PlayerAction.Pliers:
+                // Pluck tooth and load into revolver
+                if (currentPlayer.Pluck(selectedTooth))
+                {
+                    currentRevolver.LoadTooth(selectedTooth);
+                    currentRevolver.SpinChamber();
+                    Debug.Log($"{(isPlayerATurn ? "Player A" : "Player B")} plucked {selectedTooth} and loaded it.");
+                    CheckIncisorBonus(currentPlayer);
+                    CheckForGoldFilling(currentPlayer);
+                }
+                break;
+
+            case PlayerAction.Revolver:
+                // Fire Revolver at Opponent
+                ToothType firedTooth = currentRevolver.Fire();
+                ApplyToothEffect(firedTooth, currentPlayer, opponentPlayer, opponentRevolver);
+                Debug.Log($"{(isPlayerATurn ? "Player A" : "Player B")} fired {firedTooth}!");
+                NextTurn();
+                break;
+
+            case PlayerAction.EndTurn:
+                // End turn
+                Debug.Log($"{(isPlayerATurn ? "Player A" : "Player B")} ended their turn.");
+                NextTurn();
+                break;
+
+        }
+    }
+
+    // Handles effects based on tooth type
+    private void ApplyToothEffect(ToothType tooth, PlayerState shooter, PlayerState target, Revolver targetRevolver)
+    {
+        int bonusDamage = 0;
+        if (shooter.incisorBonusNextTurn && !shooter.effectsDisabled)
+        {
+            bonusDamage = 1;
+            shooter.incisorBonusNextTurn = false; // Reset bonus
+            Debug.Log($"{shooter.gameObject.name} Incisor bonus applied! +1 damage.");
+        }
+
+
+        switch (tooth)
+        {
+            case ToothType.Incisor:
+                target.TakeDamage(1 + bonusDamage);
+                if (shooter.effectsDisabled) break;
+                break;
+            case ToothType.Canine:
+                target.TakeDamage(1 + bonusDamage);
+                if (shooter.effectsDisabled) break;
+                ApplyBleedEffect(target);
+                break;
+            case ToothType.Premolar:
+                target.TakeDamage(1 + bonusDamage);
+                if (shooter.effectsDisabled) break;
+                SpinOpponentChamber(targetRevolver);
+                break;
+            case ToothType.Molar:
+                target.TakeDamage(3 + bonusDamage);
+                break;
+            case ToothType.Wisdom:
+                target.TakeDamage(1 + bonusDamage);
+                if (shooter.effectsDisabled) break;
+                RemoveRandomToothFromChamber(targetRevolver);
+                break;
+            case ToothType.GoldFilling:
+                target.TakeDamage(1 + bonusDamage);
+                if (shooter.effectsDisabled) break;
+                break;
+            case ToothType.Blank:
+                // No effect
+                break;
+        }
+
+        CheckGameOver();
+    }
+
+    private void SpinOpponentChamber(Revolver opponentRevolver)
+    {
+        opponentRevolver.SpinChamber();
+        Debug.Log("Opponent's revolver chamber spun due to Premolar effect!");
+    }
+
+    private void CheckIncisorBonus(PlayerState shooter)
+    {
+        // Count loaded incisors in shooter's revolver
+        Revolver shooterRevolver = isPlayerATurn ? revolverA : revolverB;
+        int incisorCount = 0;
+
+        foreach (var tooth in shooterRevolver.chamberedTeeth)
+        {
+            if (tooth == ToothType.Incisor) incisorCount++;
+        }
+
+        if (incisorCount >= 3)
+        {
+            shooter.incisorBonusNextTurn = true;
+            Debug.Log($"{shooter.gameObject.name} will deal +1 damage next turn due to Incisor bonus!");
+        }
+    }
+
+    private void ApplyBleedEffect(PlayerState target)
+    {
+        target.isBleeding = true;
+        target.bleedTurnsRemaining = 2;
+        target.effectsDisabled = true;
+        target.effectsDisabledTurns = 2;
+        Debug.Log($"{target.gameObject.name} is bleeding and tooth effects are disabled for 2 turns!");
+    }
+
+    private void RemoveRandomToothFromChamber(Revolver reolver)
+    {
+        // Find indices of non-blank teeth
+        var loadedIndices = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < reolver.chamberedTeeth.Length; i++)
+        {
+            if (revolver.chamberedTeeth[i] != ToothType.Blank)
+            {
+                loadedIndices.Add(i);
+            }
+        }
+
+        if (loadedIndices.Count == 0) return; // No teeth to remove
+
+        // Randomly select one and turn it into a blank
+        int randomIndex = loadedIndices[randomIndex.Range(0, loadedIndices.Count)];
+        ToothType removedTooth = revolver.chamberedTeeth[randomIndex];
+        revolver.chamberedTeeth[randomIndex] = ToothType.Blank;
+        Debug.Log($"Wisdom Tooth effect: Removed {removedTooth} from opponent's chamber!");
+    }
+
+    private void CheckForGoldFilling(PlayerState shooter)
+    {
+        Revolver shooterRevolver = isPlayerATurn ? revolverA : revolverB;
+        // Check for Gold Filling in the chamber
+        foreach (var tooth in shooterRevolver.chamberedTeeth)
+        {
+            if (tooth == ToothType.GoldFilling)
+            {
+                shooterRevolver.hasGoldFillingLoaded = true;
+                Debug.Log($"{shooter.gameObject.name}'s revolver is now guaranteed to fire loaded teeth until the Gold Filling is fired!");
+                return;
+            }
+        }
+
+        shooterRevolver.hasGoldFillingLoaded = false;
+    }
+}
+
+public enum PlayerAction
+{
+    Pliers,
+    Revolver,
+    EndTurn
 }
