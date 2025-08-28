@@ -10,7 +10,7 @@ public class PlayerState : MonoBehaviour
     public int bleedTurnsRemaining = 0;
     public bool effectsDisabled = false;
     public int effectsDisabledTurns = 0;
-    public bool hasIncisorBonus = false;
+    public bool incisorBonusNextTurn = false;
 
     [Header("Starting Teeth")]
     [SerializeField] private int incisors = 4;
@@ -31,7 +31,7 @@ public class PlayerState : MonoBehaviour
         { ToothType.Premolar, 1 },
         { ToothType.Molar, 3 },
         { ToothType.Wisdom, 2 },
-        { ToothType.GoldFilling, 2 }
+        { ToothType.GoldFilling, 3 }
     };
 
     public int Health => currentHealth;
@@ -71,20 +71,14 @@ public class PlayerState : MonoBehaviour
         currentHealth -= amount;
         currentHealth = Mathf.Max(currentHealth, 0); // Prevent negative health
         Debug.Log($"{gameObject.name} took {amount} damage! Health: {currentHealth}/{maxHealth}");
-
-        if (currentHealth <= 0)
-        {
-            Debug.Log($"{gameObject.name} has been defeated!");
-            // Handle defeat (e.g., end game, respawn, etc.)
-        }
     }
 
     public void UpdateStatusEffects()
     {
         if (isBleeding)
         {
-            bleedTurnsRemaining--;
-            if (bleedTurnsRemaining <= 0)
+            bleedTurnsRemaining = Mathf.Max(bleedTurnsRemaining - 1, 0);
+            if (bleedTurnsRemaining == 0)
             {
                 isBleeding = false;
                 Debug.Log($"{gameObject.name} has stopped bleeding.");
@@ -93,8 +87,8 @@ public class PlayerState : MonoBehaviour
 
         if (effectsDisabled)
         {
-            effectsDisabledTurns--;
-            if (effectsDisabledTurns <= 0)
+            effectsDisabledTurns = Mathf.Max(effectsDisabledTurns - 1, 0);
+            if (effectsDisabledTurns == 0)
             {
                 effectsDisabled = false;
                 Debug.Log($"{gameObject.name}'s tooth effects are re-enabled.");

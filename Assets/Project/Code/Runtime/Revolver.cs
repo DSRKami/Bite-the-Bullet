@@ -23,47 +23,34 @@ public class Revolver : MonoBehaviour
                 return true;
             }
         }
-
         return false; // no space
     }
 
     public void SpinChamber()
     {
-        if (chamberedTeeth.Length < 6)
+        // Add blanks until chamber is size 6
+        while (chamberedTeeth.Length < 6)
         {
-            chamberedTeeth.Add(ToothType.Blank);
-            if (chamberedTeeth.Length < 6)
+            ToothType[] newChamber = new ToothType[chamberedTeeth.Length + 1];
+            for (int i = 0; i < chamberedTeeth.Length; i++)
             {
-                SpinChamber();
+                newChamber[i] = chamberedTeeth[i];
             }
+            newChamber[chamberedTeeth.Length] = ToothType.Blank;
+            chamberedTeeth = newChamber;
         }
     }
 
     public ToothType Fire()
     {
+        if (chamberedTeeth.Length == 0) return ToothType.Blank;
+
+        int randomIndex;
+
         if (!hasGoldFillingLoaded)
         {
-            // Find incides of teeth
-            var indices = new System.Collections.Generic.List<int>();
-            for (int i = 0; i < chamberedTeeth.Length; i++)
-            {
-                indices.Add(i);
-            }
-
-            // Randomly select one
-            int randomIndex = indices[randomIndex.Range(0, indices.Count)];
-            ToothType firedTooth = chamberedTeeth[randomIndex];
-
-            // Remove the fired tooth from the array
-            ToothType[] newChamber = new ToothType[chamberedTeeth.Length - 1];
-            int newIndex = 0;
-            for (int i = 0; i < chamberedTeeth.Length; i++)
-            {
-                if (i != randomIndex) newChamber[newIndex++] = chamberedTeeth[i];
-            }
-
-            chamberedTeeth = newChamber;
-            return firedTooth;
+            // Select any chamber
+            randomIndex = Random.Range(0, chamberedTeeth.Length);
         }
         else
         {
@@ -77,29 +64,31 @@ public class Revolver : MonoBehaviour
                 }
             }
 
-            if (loadedIndices.Count == 0) return ToothType.Blank; // No loaded teeth, should not happen
+            if (loadedIndices.Count == 0) return ToothType.Blank; // No loaded teeth
 
-            int randomIndex = loadedIndices[randomIndex.Range(0, loadedIndices.Count)];
-            ToothType firedTooth = chamberedTeeth[randomIndex];
-
-            // Remove the fired tooth from the array
-            ToothType[] newChamber = new ToothType[chamberedTeeth.Length - 1];
-            int newIndex = 0;
-            for (int i = 0; i < chamberedTeeth.Length; i++)
-            {
-                if (i != randomIndex) newChamber[newIndex++] = chamberedTeeth[i];
-            }
-
-            chamberedTeeth = newChamber;
-
-            // If Gold Filling was fired, disable the effect
-            if (firedTooth == ToothType.GoldFilling)
-            {
-                hasGoldFillingLoaded = false;
-            }
-
-            return firedTooth;
+            randomIndex = loadedIndices[Random.Range(0, loadedIndices.Count)];
         }
 
+        ToothType firedTooth = chamberedTeeth[randomIndex];
+
+        // Shrink the array by removing the fired tooth
+        ToothType[] newChamber = new ToothType[chamberedTeeth.Length - 1];
+        int newIndex = 0;
+        for (int i = 0; i < chamberedTeeth.Length; i++)
+        {
+            if (i != randomIndex)
+            {
+                newChamber[newIndex++] = chamberedTeeth[i];
+            }
+        }
+        chamberedTeeth = newChamber;
+
+        // If Gold Filling was fired, disable the effect
+        if (firedTooth == ToothType.GoldFilling)
+        {
+            hasGoldFillingLoaded = false;
+        }
+
+        return firedTooth;
     }
 }

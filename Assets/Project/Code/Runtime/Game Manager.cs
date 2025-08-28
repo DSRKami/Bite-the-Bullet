@@ -169,11 +169,11 @@ public class GameManager : MonoBehaviour
         Debug.Log($"{target.gameObject.name} is bleeding and tooth effects are disabled for 2 turns!");
     }
 
-    private void RemoveRandomToothFromChamber(Revolver reolver)
+    private void RemoveRandomToothFromChamber(Revolver revolver)
     {
         // Find indices of non-blank teeth
         var loadedIndices = new System.Collections.Generic.List<int>();
-        for (int i = 0; i < reolver.chamberedTeeth.Length; i++)
+        for (int i = 0; i < revolver.chamberedTeeth.Length; i++)
         {
             if (revolver.chamberedTeeth[i] != ToothType.Blank)
             {
@@ -184,7 +184,7 @@ public class GameManager : MonoBehaviour
         if (loadedIndices.Count == 0) return; // No teeth to remove
 
         // Randomly select one and turn it into a blank
-        int randomIndex = loadedIndices[randomIndex.Range(0, loadedIndices.Count)];
+        int randomIndex = loadedIndices[Random.Range(0, loadedIndices.Count)];
         ToothType removedTooth = revolver.chamberedTeeth[randomIndex];
         revolver.chamberedTeeth[randomIndex] = ToothType.Blank;
         Debug.Log($"Wisdom Tooth effect: Removed {removedTooth} from opponent's chamber!");
