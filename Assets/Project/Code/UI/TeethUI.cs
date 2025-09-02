@@ -48,28 +48,7 @@ public class TeethUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        Debug.Log("Clicked on tooth: " + toothType);
-
         toothUI.SetActive(false);
-        PlayerState currentPlayer = gameManager.isPlayerATurn ? PlayerA : PlayerB;
-        Revolver currentRevolver = gameManager.isPlayerATurn ? revolverA : revolverB;
-        if (currentPlayer.Pluck(toothType))
-        {
-            if (currentRevolver.LoadTooth(toothType))
-            {
-                if (toothType == ToothType.GoldFilling)
-                {
-                    currentRevolver.hasGoldFillingLoaded = true;
-                }
-            }
-            else
-            {
-                Debug.Log("Revolver is full, cannot load more teeth.");
-            }
-        }
-        else
-        {
-            Debug.Log("Cannot pluck tooth: " + toothType);
-        }
+        gameManager.PlayTurn(PlayerAction.Pliers, toothType);
     }
 }

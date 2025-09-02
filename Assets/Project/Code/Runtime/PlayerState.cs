@@ -96,4 +96,9 @@ public class PlayerState : MonoBehaviour
             }
         }
     }
+
+    public float GetHPPercentage()
+    {
+        return (float)currentHealth / maxHealth * 100;
+    }
 }

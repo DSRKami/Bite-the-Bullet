@@ -1,5 +1,6 @@
 using UnityEngine;
-
+using TMPro;
+using System.Collections;
 public class GameManager : MonoBehaviour
 {
     [Header("Players")]
@@ -13,6 +14,10 @@ public class GameManager : MonoBehaviour
     [Header("Game State")]
     public bool isPlayerATurn = true;
     public int currentTurnCount = 0;
+
+    [Header("UI Elements")]
+    public TextMeshProUGUI displayMessage;
+    public float fadeDuration = 1.5f;
 
     void Start()
     {
@@ -68,9 +73,14 @@ public class GameManager : MonoBehaviour
                 // Pluck tooth and load into revolver
                 if (currentPlayer.Pluck(selectedTooth))
                 {
-                    currentRevolver.LoadTooth(selectedTooth);
-                    currentRevolver.SpinChamber();
-                    Debug.Log($"{(isPlayerATurn ? "Player A" : "Player B")} plucked {selectedTooth} and loaded it.");
+                    if (currentRevolver.LoadTooth(selectedTooth))
+                    {
+                        if (selectedTooth == ToothType.GoldFilling)
+                        {
+                            currentRevolver.hasGoldFillingLoaded = true;
+                        }
+                    }
+                    ShowAndFade($"Plucked {selectedTooth}");
                     CheckIncisorBonus(currentPlayer);
                     CheckForGoldFilling(currentPlayer);
                 }
@@ -80,7 +90,7 @@ public class GameManager : MonoBehaviour
                 // Fire Revolver at Opponent
                 ToothType firedTooth = currentRevolver.Fire();
                 ApplyToothEffect(firedTooth, currentPlayer, opponentPlayer, opponentRevolver);
-                Debug.Log($"{(isPlayerATurn ? "Player A" : "Player B")} fired {firedTooth}!");
+                ShowAndFade($"Fired {firedTooth}");
                 NextTurn();
                 break;
 
@@ -210,6 +220,30 @@ public class GameManager : MonoBehaviour
         }
 
         shooterRevolver.hasGoldFillingLoaded = false;
+    }
+
+    public void ShowAndFade(string message)
+    {
+        Debug.Log("I'm working.");
+
+        StopAllCoroutines();
+        displayMessage.text = message;
+        displayMessage.alpha = 1f;
+        displayMessage.gameObject.SetActive(true);
+        StartCoroutine(FadeOutText());
+    }
+
+    IEnumerator FadeOutText()
+    {
+        float elapsedTime = 0f;
+        while (elapsedTime < fadeDuration)
+        {
+            displayMessage.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeDuration);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        displayMessage.alpha = 0f;
+        displayMessage.gameObject.SetActive(false);
     }
 }
 

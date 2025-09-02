@@ -92,4 +92,22 @@ public class Revolver : MonoBehaviour
         }
         return firedTooth;
     }
+
+    public int GetLoadedToothCount()
+    {
+        int count = 0;
+        foreach (var tooth in chamberedTeeth)
+        {
+            if (tooth != ToothType.Blank)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int GetChamberSize()
+    {
+        return chamberedTeeth.Length;
+    }
 }
