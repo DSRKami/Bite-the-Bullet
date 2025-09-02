@@ -14,6 +14,11 @@ public class GameManager : MonoBehaviour
     public bool isPlayerATurn = true;
     public int currentTurnCount = 0;
 
+    void Start()
+    {
+        StartGame();
+    }
+
     public void StartGame()
     {
         isPlayerATurn = Random.Range(0, 2) == 0;

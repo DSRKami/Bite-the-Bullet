@@ -17,7 +17,7 @@ public class RevolverInteract : MonoBehaviour
     public GameManager gameManager;
     public Revolver revolver;
 
-    bool isAnimating;
+    public bool isAnimating;
 
     void Start()
     {
@@ -37,13 +37,6 @@ public class RevolverInteract : MonoBehaviour
         if (!revolver) revolver = GetComponent<Revolver>();
     }
 
-    public void OnMouseDown()
-    {
-        if (isAnimating) return;
-        Debug.Log("Revolver Interact Clicked");
-        StartCoroutine(AnimateAndFire());
-    }
-
     public IEnumerator AnimateAndFire()
     {
         Debug.Log("Revolver Interact AnimateAndFire");
@@ -57,7 +50,6 @@ public class RevolverInteract : MonoBehaviour
         yield return new WaitForSeconds(fireHoldTime);
 
         // Fire Gameplay Logic
-        ToothType firedTooth = revolver.Fire();
         if (gameManager != null)
         {
             gameManager.PlayTurn(PlayerAction.Revolver);

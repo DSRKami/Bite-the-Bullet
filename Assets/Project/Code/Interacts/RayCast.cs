@@ -14,10 +14,15 @@ public class RayCast : MonoBehaviour
             Ray ray = cam.ScreenPointToRay(screenPos);
             if (Physics.Raycast(ray, out var hit, 100f))
             {
-                var interact = hit.collider.GetComponent<RevolverInteract>();
-                if (interact != null)
-                    interact.StartCoroutine(interact.AnimateAndFire());
-                    Debug.Log("RayCast Clicked at: " + screenPos);
+                // Revolver Interact
+                var revolverInteract = hit.collider.GetComponent<RevolverInteract>();
+                if (revolverInteract != null && !revolverInteract.isAnimating)
+                    revolverInteract.StartCoroutine(revolverInteract.AnimateAndFire());
+
+                // Pliers Interact
+                var pliersInteract = hit.collider.GetComponent<PliersInteract>();
+                if (pliersInteract != null)
+                    pliersInteract.DisplayTeethUI();
             }
         }
     }

@@ -5,7 +5,7 @@ public class PlayerState : MonoBehaviour
 {
     [Header("Stats")]
     [SerializeField] private int maxHealth = 12;
-    private int currentHealth;
+    public int currentHealth;
     public bool isBleeding = false;
     public int bleedTurnsRemaining = 0;
     public bool effectsDisabled = false;
@@ -61,6 +61,7 @@ public class PlayerState : MonoBehaviour
 
             mouth[tooth]--;
             currentHealth -= removalDamageMap[tooth];
+            Debug.Log($"{gameObject.name} plucked a {tooth} and took {removalDamageMap[tooth]} damage. Health: {currentHealth}/{maxHealth}");
             return true;
         }
         return false;

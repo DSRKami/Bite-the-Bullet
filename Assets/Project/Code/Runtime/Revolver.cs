@@ -15,6 +15,8 @@ public class Revolver : MonoBehaviour
 
     public bool LoadTooth(ToothType tooth)
     {
+        SpinChamber();
+
         for (int i = 0; i < chamberedTeeth.Length; i++)
         {
             if (chamberedTeeth[i] == ToothType.Blank)
@@ -88,7 +90,6 @@ public class Revolver : MonoBehaviour
         {
             hasGoldFillingLoaded = false;
         }
-
         return firedTooth;
     }
 }
