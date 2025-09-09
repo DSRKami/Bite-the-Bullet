@@ -31,7 +31,7 @@ public class TeethUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,
         if (teethImage != null)
         {
             Color c = teethImage.color;
-            c.a = 1.0f;
+            c.a = 0.1f;
             teethImage.color = c;
         }
     }
