@@ -11,9 +11,17 @@ public class GameManager : MonoBehaviour
     public Revolver revolverA;
     public Revolver revolverB;
 
+    [Header("Interactable Colliders")]
+    public Collider revolverACollider;
+    public Collider revolverBCollider;
+    public Collider pliersACollider;
+    public Collider pliersBCollider;
+
+
     [Header("Game State")]
     public bool isPlayerATurn = true;
     public int currentTurnCount = 0;
+    public RayCast rayCast;
 
     [Header("UI Elements")]
     public TextMeshProUGUI displayMessage;
@@ -24,10 +32,26 @@ public class GameManager : MonoBehaviour
         StartGame();
     }
 
+    void Update()
+    {
+        if (RevolverInteract.revolverAnimating || PliersInteract.pliersAnimating)
+        {
+            revolverACollider.enabled = false;
+            pliersACollider.enabled = false;
+            revolverBCollider.enabled = false;
+            pliersBCollider.enabled = false;
+        }
+        else
+        {
+            UpdateColliders();
+        }
+    }
+
     public void StartGame()
     {
         isPlayerATurn = Random.Range(0, 2) == 0;
         currentTurnCount = 0;
+        UpdateColliders();
         Debug.Log("Coinflip! " + (isPlayerATurn ? "Player A starts" : "Player B starts"));
     }
 
@@ -37,6 +61,7 @@ public class GameManager : MonoBehaviour
         currentTurnCount++;
         PlayerState currentPlayer = isPlayerATurn ? playerA : playerB;
         currentPlayer.UpdateStatusEffects();
+        UpdateColliders();
         Debug.Log("Turn " + currentTurnCount + ": " + (isPlayerATurn ? "Player A's turn" : "Player B's turn"));
     }
 
@@ -80,6 +105,8 @@ public class GameManager : MonoBehaviour
                             currentRevolver.hasGoldFillingLoaded = true;
                         }
                     }
+                    rayCast.pliersAnimator.SetTrigger("Drop Tooth");
+                    rayCast.revolverAnimator.SetTrigger("Load");
                     ShowAndFade($"Plucked {selectedTooth}");
                     CheckIncisorBonus(currentPlayer);
                     CheckForGoldFilling(currentPlayer);
@@ -91,7 +118,6 @@ public class GameManager : MonoBehaviour
                 ToothType firedTooth = currentRevolver.Fire();
                 ApplyToothEffect(firedTooth, currentPlayer, opponentPlayer, opponentRevolver);
                 ShowAndFade($"Fired {firedTooth}");
-                NextTurn();
                 break;
 
             case PlayerAction.EndTurn:
@@ -118,29 +144,29 @@ public class GameManager : MonoBehaviour
         switch (tooth)
         {
             case ToothType.Incisor:
-                target.TakeDamage(1 + bonusDamage);
+                target.TakeDamage(2 + bonusDamage);
                 if (shooter.effectsDisabled) break;
                 break;
             case ToothType.Canine:
-                target.TakeDamage(1 + bonusDamage);
+                target.TakeDamage(2 + bonusDamage);
                 if (shooter.effectsDisabled) break;
                 ApplyBleedEffect(target);
                 break;
             case ToothType.Premolar:
-                target.TakeDamage(1 + bonusDamage);
+                target.TakeDamage(2 + bonusDamage);
                 if (shooter.effectsDisabled) break;
                 SpinOpponentChamber(targetRevolver);
                 break;
             case ToothType.Molar:
-                target.TakeDamage(3 + bonusDamage);
+                target.TakeDamage(6 + bonusDamage);
                 break;
             case ToothType.Wisdom:
-                target.TakeDamage(1 + bonusDamage);
+                target.TakeDamage(2 + bonusDamage);
                 if (shooter.effectsDisabled) break;
                 RemoveRandomToothFromChamber(targetRevolver);
                 break;
             case ToothType.GoldFilling:
-                target.TakeDamage(1 + bonusDamage);
+                target.TakeDamage(2 + bonusDamage);
                 if (shooter.effectsDisabled) break;
                 break;
             case ToothType.Blank:
@@ -224,8 +250,6 @@ public class GameManager : MonoBehaviour
 
     public void ShowAndFade(string message)
     {
-        Debug.Log("I'm working.");
-
         StopAllCoroutines();
         displayMessage.text = message;
         displayMessage.alpha = 1f;
@@ -244,6 +268,14 @@ public class GameManager : MonoBehaviour
         }
         displayMessage.alpha = 0f;
         displayMessage.gameObject.SetActive(false);
+    }
+
+    private void UpdateColliders()
+    {
+        revolverACollider.enabled = isPlayerATurn;
+        pliersACollider.enabled = isPlayerATurn;
+        revolverBCollider.enabled = !isPlayerATurn;
+        pliersBCollider.enabled = !isPlayerATurn;
     }
 }
 

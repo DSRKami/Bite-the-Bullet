@@ -1,12 +1,21 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using TMPro;
+using System.Collections;
 
 public class RayCast : MonoBehaviour
 {
     public Camera cam;
-    public GameObject pliersHoverUI;
-    public GameObject revolverHoverUI;
-    public GameObject playerInformationUI;
+    public GameObject objectNameUI;
+    public GameObject objectDescriptionUI;
+
+    [Header("Plier A Information")]
+    public Animator pliersAnimator;
+
+    [Header("Revolver A Information")]
+    public Animator revolverAnimator;
+    public Animator revolverA;
+    public Animator revolverB;
 
     void Update()
     {
@@ -20,26 +29,48 @@ public class RayCast : MonoBehaviour
         {
             if (hit.collider.GetComponent<RevolverInteract>() != null) hoveringRevolver = true;
             if (hit.collider.GetComponent<PliersInteract>() != null) hoveringPliers = true;
-        }
 
-        revolverHoverUI.SetActive(hoveringRevolver);
-        pliersHoverUI.SetActive(hoveringPliers);
-        playerInformationUI.SetActive(!hoveringRevolver && !hoveringPliers);
-
-        // Click Logic
-        if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
-        {
-            if (Physics.Raycast(ray, out var hitClick, 100f))
+            objectNameUI.SetActive(hoveringRevolver || hoveringPliers || TeethUI.toothHovering);
+            objectDescriptionUI.SetActive(hoveringRevolver || hoveringPliers || TeethUI.toothHovering);
+            if (hoveringRevolver)
             {
-                // Revolver Interact
-                var revolverInteract = hitClick.collider.GetComponent<RevolverInteract>();
-                if (revolverInteract != null && !revolverInteract.isAnimating)
-                    revolverInteract.StartCoroutine(revolverInteract.AnimateAndFire());
+                objectNameUI.GetComponent<TextMeshProUGUI>().text = "REVOLVER";
+                objectDescriptionUI.GetComponent<TextMeshProUGUI>().text = "FIRES A CHAMBER BASED ON CURRENT ODDS.";
+            }
+            else if (hoveringPliers)
+            {
+                objectNameUI.GetComponent<TextMeshProUGUI>().text = "PLIERS";
+                objectDescriptionUI.GetComponent<TextMeshProUGUI>().text = "SELECTS A TOOTH TO LOAD INTO THE REVOLVER.";
+            }
 
-                // Pliers Interact
-                var pliersInteract = hitClick.collider.GetComponent<PliersInteract>();
-                if (pliersInteract != null)
-                    pliersInteract.DisplayTeethUI();
+            // Click Logic
+            if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
+            {
+                if (Physics.Raycast(ray, out var hitClick, 100f))
+                {
+                    // Revolver Interact
+                    var revolverInteract = hitClick.collider.GetComponent<RevolverInteract>();
+                    if (revolverInteract != null)
+                    {
+                        revolverAnimator = hitClick.collider.GetComponent<Animator>();
+                        RevolverInteract.revolverAnimating = true;
+                        revolverAnimator.SetTrigger("Shoot");
+                        RevolverInteract.revolverAnimating = false;
+                    }
+
+                    // Pliers Interact
+                    var pliersInteract = hitClick.collider.GetComponent<PliersInteract>();
+                    if (pliersInteract != null)
+                    {
+                        if (pliersInteract.pliersIndex == 0) revolverAnimator = revolverA;
+                        else revolverAnimator = revolverB;
+
+                        pliersAnimator = hitClick.collider.GetComponent<Animator>();
+                        PliersInteract.pliersAnimating = true;
+                        pliersAnimator.SetTrigger("Pick Up Pliers");
+                        PliersInteract.pliersAnimating = false;
+                    }
+                }
             }
         }
     }

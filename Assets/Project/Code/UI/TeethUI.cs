@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using TMPro;
 
 public class TeethUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
@@ -15,7 +16,10 @@ public class TeethUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,
     public Revolver revolverA;
     public Revolver revolverB;
 
-
+    [Header("Teeth Information Display")]
+    public GameObject toothNameText;
+    public GameObject toothDescriptionText;
+    public static bool toothHovering = false;
     public GameManager gameManager;
 
     void Start()
@@ -34,6 +38,9 @@ public class TeethUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,
             c.a = 0.1f;
             teethImage.color = c;
         }
+        toothHovering = true;
+
+        ChamberHover.UpdateToothText(toothType, toothNameText, toothDescriptionText);
     }
 
     public void OnPointerExit(PointerEventData eventData)
@@ -44,11 +51,26 @@ public class TeethUI : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler,
             c.a = 0f;
             teethImage.color = c;
         }
+
+        toothHovering = false;
     }
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        toothUI.SetActive(false);
+        if (teethImage != null)
+        {
+            Color c = teethImage.color;
+            c.a = 0f;
+            teethImage.color = c;
+        }
+
+        toothHovering = false;
         gameManager.PlayTurn(PlayerAction.Pliers, toothType);
+        toothUI.SetActive(false);
+    }
+
+    public void DropPliers()
+    {
+        toothUI.SetActive(false);
     }
 }

@@ -16,8 +16,9 @@ public class RevolverInteract : MonoBehaviour
     [Header("Gameplay")]
     public GameManager gameManager;
     public Revolver revolver;
+    public GameObject muzzleFlash;
 
-    public bool isAnimating;
+    public static bool revolverAnimating = false;
 
     void Start()
     {
@@ -37,48 +38,38 @@ public class RevolverInteract : MonoBehaviour
         if (!revolver) revolver = GetComponent<Revolver>();
     }
 
-    public IEnumerator AnimateAndFire()
+    public void PlayRevolverTurn()
     {
-        Debug.Log("Revolver Interact AnimateAndFire");
-
-        isAnimating = true;
-
-        // Lift & Aim
-        yield return LerpTransform(transform, idlePose, aimPose, liftTime);
-
-        // Hold at Aim
-        yield return new WaitForSeconds(fireHoldTime);
-
-        // Fire Gameplay Logic
+        StartCoroutine(FlashMuzzle());
         if (gameManager != null)
         {
             gameManager.PlayTurn(PlayerAction.Revolver);
         }
-
-        // Drop Back down
-        yield return LerpTransform(transform, aimPose, idlePose, dropTime);
-
-        isAnimating = false;
     }
 
-    IEnumerator LerpTransform(Transform obj, Transform start, Transform end, float duration)
+    public void PlayNextTurn()
     {
-        float elapsed = 0f;
-        Vector3 initialPosition = start.position;
-        Quaternion initialRotation = start.rotation;
-        Vector3 targetPosition = end.position;
-        Quaternion targetRotation = end.rotation;
-
-        while (elapsed < duration)
+        if (gameManager != null)
         {
-            float t = elapsed / duration;
-            obj.position = Vector3.Lerp(initialPosition, targetPosition, t);
-            obj.rotation = Quaternion.Slerp(initialRotation, targetRotation, t);
-            elapsed += Time.deltaTime;
-            yield return null;
+            gameManager.NextTurn();
         }
+    }
 
-        obj.position = targetPosition;
-        obj.rotation = targetRotation;
+
+    public void BeginAnimation()
+    {
+        revolverAnimating = true;
+    }
+
+    public void EndAnimation()
+    {
+        revolverAnimating = false;
+    }
+
+    IEnumerator FlashMuzzle()
+    {
+        muzzleFlash.SetActive(true);
+        yield return new WaitForSeconds(0.05f);
+        muzzleFlash.SetActive(false);
     }
 }   

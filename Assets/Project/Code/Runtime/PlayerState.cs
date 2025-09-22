@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class PlayerState : MonoBehaviour
 {
     [Header("Stats")]
-    [SerializeField] private int maxHealth = 12;
+    [SerializeField] private int maxHealth = 24;
     public int currentHealth;
     public bool isBleeding = false;
     public int bleedTurnsRemaining = 0;
