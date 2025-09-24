@@ -9,21 +9,29 @@ public class CameraTurnController : MonoBehaviour
     public float transitionDuration = 1.2f;
 
     public bool lastIsPlayerATurn;
-    bool isBlending;
+    public bool isBlending;
 
     void Start()
     {
-        lastIsPlayerATurn = gameManager.isPlayerATurn;
-        // Snap to the correct side at start
-        if (!gameManager.isPlayerATurn)
-        {
-            Transform t = playerBPos;
-            transform.SetPositionAndRotation(t.position, t.rotation);
-        }
+        
     }
 
     void Update()
     {
+        if (gameManager.decidingPlayer == true)
+        {
+            lastIsPlayerATurn = gameManager.isPlayerATurn;
+            // Snap to the correct side at start
+            if (!gameManager.isPlayerATurn)
+            {
+                Transform t = playerBPos;
+                transform.SetPositionAndRotation(t.position, t.rotation);
+                GetComponent<CameraWobble>()?.ResetBaseTransform();
+            }
+
+            gameManager.decidingPlayer = false;
+        }
+
         // Only react when the turn flips
         if (gameManager.isPlayerATurn != lastIsPlayerATurn && !isBlending)
         {
@@ -56,6 +64,7 @@ public class CameraTurnController : MonoBehaviour
         // Snap to target
         transform.SetPositionAndRotation(endPos, endRot);
         isBlending = false;
+        GetComponent<CameraWobble>()?.ResetBaseTransform();
     }
 
 

@@ -3,7 +3,10 @@ using UnityEngine;
 public class Revolver : MonoBehaviour
 {
     public ToothType[] chamberedTeeth = new ToothType[6];
+    public bool hasIncisorBonus = false;
+    public int incisorCount = 0;
     public bool hasGoldFillingLoaded = false;
+    public bool isBlank = false;
 
     void Start()
     {
@@ -11,6 +14,11 @@ public class Revolver : MonoBehaviour
         {
             chamberedTeeth[i] = ToothType.Blank;
         }
+    }
+
+    void Update()
+    {
+
     }
 
     public bool LoadTooth(ToothType tooth)
@@ -22,6 +30,9 @@ public class Revolver : MonoBehaviour
             if (chamberedTeeth[i] == ToothType.Blank)
             {
                 chamberedTeeth[i] = tooth;
+                if (tooth == ToothType.Incisor) incisorCount++;
+
+                hasIncisorBonus = incisorCount >= 3; 
                 return true;
             }
         }
@@ -90,6 +101,23 @@ public class Revolver : MonoBehaviour
         {
             hasGoldFillingLoaded = false;
         }
+
+        // Update incisor count and bonus status
+        if (firedTooth == ToothType.Incisor)
+        {
+            incisorCount--;
+            hasIncisorBonus = incisorCount >= 3;
+        }
+
+        if (firedTooth == ToothType.Blank)
+        {
+            isBlank = true;
+        }
+        else
+        {
+            isBlank = false;
+        }
+
         return firedTooth;
     }
 

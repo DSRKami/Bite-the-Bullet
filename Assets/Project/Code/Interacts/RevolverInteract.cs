@@ -19,6 +19,7 @@ public class RevolverInteract : MonoBehaviour
     public GameObject muzzleFlash;
 
     public static bool revolverAnimating = false;
+    public GameObject enemyEyes;
 
     void Start()
     {
@@ -40,10 +41,14 @@ public class RevolverInteract : MonoBehaviour
 
     public void PlayRevolverTurn()
     {
-        StartCoroutine(FlashMuzzle());
         if (gameManager != null)
         {
             gameManager.PlayTurn(PlayerAction.Revolver);
+        }
+        if (!revolver.isBlank)
+        {
+            StartCoroutine(FlashMuzzle());
+            WinceinPain();
         }
     }
 
@@ -71,5 +76,18 @@ public class RevolverInteract : MonoBehaviour
         muzzleFlash.SetActive(true);
         yield return new WaitForSeconds(0.05f);
         muzzleFlash.SetActive(false);
+    }
+
+    // Closes the enemies eyes in pain when the player shoots a bullet
+    public void WinceinPain()
+    {
+        StartCoroutine(Wince());
+    }
+    
+    IEnumerator Wince()
+    {
+        enemyEyes.SetActive(false);
+        yield return new WaitForSeconds(3f);
+        enemyEyes.SetActive(true);
     }
 }   

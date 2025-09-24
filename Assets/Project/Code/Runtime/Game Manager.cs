@@ -20,12 +20,15 @@ public class GameManager : MonoBehaviour
 
     [Header("Game State")]
     public bool isPlayerATurn = true;
+    public bool decidingPlayer = false;
     public int currentTurnCount = 0;
     public RayCast rayCast;
+    
 
     [Header("UI Elements")]
     public TextMeshProUGUI displayMessage;
     public float fadeDuration = 1.5f;
+    public GameObject gameInfoUI;
 
     void Start()
     {
@@ -50,9 +53,13 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         isPlayerATurn = Random.Range(0, 2) == 0;
+        decidingPlayer = true;
+
+        var textMesh = gameInfoUI.GetComponent<TextMeshProUGUI>();
+        textMesh.text = isPlayerATurn ? "PLAYER A STARTS!" : "PLAYER B STARTS!";
+        StartCoroutine(FadeInAndOut(gameInfoUI));
         currentTurnCount = 0;
         UpdateColliders();
-        Debug.Log("Coinflip! " + (isPlayerATurn ? "Player A starts" : "Player B starts"));
     }
 
     public void NextTurn()
@@ -65,16 +72,18 @@ public class GameManager : MonoBehaviour
         Debug.Log("Turn " + currentTurnCount + ": " + (isPlayerATurn ? "Player A's turn" : "Player B's turn"));
     }
 
-    private void CheckGameOver()
+    public void CheckGameOver()
     {
+        var textMesh = gameInfoUI.GetComponent<TextMeshProUGUI>();
+
         if (playerA.Health <= 0)
         {
-            Debug.Log("Player B wins!");
+            ShowAndFade(textMesh, "PLAYER B WINS!");
             EndGame();
         }
         else if (playerB.Health <= 0)
         {
-            Debug.Log("Player A wins!");
+            ShowAndFade(textMesh, "PLAYER A WINS!");
             EndGame();
         }
     }
@@ -82,7 +91,6 @@ public class GameManager : MonoBehaviour
     private void EndGame()
     {
         Debug.Log("Game Over!");
-        enabled = false; // Disable further game actions
     }
 
     public void PlayTurn(PlayerAction action, ToothType selectedTooth = ToothType.Blank)
@@ -107,7 +115,7 @@ public class GameManager : MonoBehaviour
                     }
                     rayCast.pliersAnimator.SetTrigger("Drop Tooth");
                     rayCast.revolverAnimator.SetTrigger("Load");
-                    ShowAndFade($"Plucked {selectedTooth}");
+                    ShowAndFade(displayMessage, $"Plucked {selectedTooth}");
                     CheckIncisorBonus(currentPlayer);
                     CheckForGoldFilling(currentPlayer);
                 }
@@ -117,7 +125,7 @@ public class GameManager : MonoBehaviour
                 // Fire Revolver at Opponent
                 ToothType firedTooth = currentRevolver.Fire();
                 ApplyToothEffect(firedTooth, currentPlayer, opponentPlayer, opponentRevolver);
-                ShowAndFade($"Fired {firedTooth}");
+                ShowAndFade(displayMessage, $"Fired {firedTooth}");
                 break;
 
             case PlayerAction.EndTurn:
@@ -248,34 +256,66 @@ public class GameManager : MonoBehaviour
         shooterRevolver.hasGoldFillingLoaded = false;
     }
 
-    public void ShowAndFade(string message)
+    public void ShowAndFade(TextMeshProUGUI TMPtext, string message)
     {
         StopAllCoroutines();
-        displayMessage.text = message;
-        displayMessage.alpha = 1f;
-        displayMessage.gameObject.SetActive(true);
-        StartCoroutine(FadeOutText());
+        TMPtext.text = message;
+        TMPtext.alpha = 1f;
+        TMPtext.gameObject.SetActive(true);
+        StartCoroutine(FadeOutText(TMPtext));
     }
 
-    IEnumerator FadeOutText()
+    IEnumerator FadeOutText(TextMeshProUGUI TMPtext)
     {
         float elapsedTime = 0f;
         while (elapsedTime < fadeDuration)
         {
-            displayMessage.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeDuration);
+            TMPtext.alpha = Mathf.Lerp(1f, 0f, elapsedTime / fadeDuration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
-        displayMessage.alpha = 0f;
-        displayMessage.gameObject.SetActive(false);
+        TMPtext.alpha = 0f;
+        TMPtext.gameObject.SetActive(false);
     }
 
     private void UpdateColliders()
     {
+
         revolverACollider.enabled = isPlayerATurn;
         pliersACollider.enabled = isPlayerATurn;
         revolverBCollider.enabled = !isPlayerATurn;
         pliersBCollider.enabled = !isPlayerATurn;
+    }
+
+    IEnumerator FadeInAndOut(GameObject uiElement)
+    {
+        uiElement.SetActive(true);
+        var textMesh = uiElement.GetComponent<TextMeshProUGUI>();
+
+        // Fade In
+        float elapsedTime = 0f;
+        while (elapsedTime < 1f)
+        {
+            textMesh.alpha = Mathf.Lerp(0f, 1f, elapsedTime / 1f);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        textMesh.alpha = 1f;
+
+        // Hold
+        yield return new WaitForSeconds(1f);
+
+        // Fade Out
+        elapsedTime = 0f;
+        while (elapsedTime < 1f)
+        {
+            textMesh.alpha = Mathf.Lerp(1f, 0f, elapsedTime / 1f);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        textMesh.alpha = 0f;
+        uiElement.SetActive(false);
+        textMesh.alpha = 1f;
     }
 }
 

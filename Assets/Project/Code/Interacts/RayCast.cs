@@ -7,10 +7,12 @@ public class RayCast : MonoBehaviour
 {
     public Camera cam;
     public GameObject objectNameUI;
+    public GameObject objectStatus;
     public GameObject objectDescriptionUI;
 
     [Header("Plier A Information")]
     public Animator pliersAnimator;
+    public GameObject toothUI;
 
     [Header("Revolver A Information")]
     public Animator revolverAnimator;
@@ -32,6 +34,8 @@ public class RayCast : MonoBehaviour
 
             objectNameUI.SetActive(hoveringRevolver || hoveringPliers || TeethUI.toothHovering);
             objectDescriptionUI.SetActive(hoveringRevolver || hoveringPliers || TeethUI.toothHovering);
+            objectStatus.SetActive(TeethUI.toothHovering);
+
             if (hoveringRevolver)
             {
                 objectNameUI.GetComponent<TextMeshProUGUI>().text = "REVOLVER";
@@ -73,5 +77,13 @@ public class RayCast : MonoBehaviour
                 }
             }
         }
+    }
+
+    public void DropPliers()
+    {
+        PliersInteract.pliersAnimating = true;
+        pliersAnimator.SetTrigger("Drop Pliers");
+        PliersInteract.pliersAnimating = false;
+        toothUI.SetActive(false);
     }
 }

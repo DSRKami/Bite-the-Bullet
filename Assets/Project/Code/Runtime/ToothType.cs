@@ -8,5 +8,6 @@ public enum ToothType
     Premolar,
     Molar,
     Wisdom,
-    GoldFilling
+    GoldFilling,
+    Used
 }

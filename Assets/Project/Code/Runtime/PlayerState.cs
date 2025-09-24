@@ -97,6 +97,11 @@ public class PlayerState : MonoBehaviour
         }
     }
 
+    public bool HasTooth(ToothType tooth)
+    {
+        return mouth.ContainsKey(tooth) && mouth[tooth] > 0;
+    }
+
     public float GetHPPercentage()
     {
         return (float)currentHealth / maxHealth * 100;
